@@ -1,0 +1,4 @@
+Tap-Tap
+=======
+
+For our project, we plan to create a game similar to the popular game, Tap Tap (http://en.wikipedia.org/wiki/Tap_Tap). In the game, a series of inputs will scroll down the display and the player must press each input at the correct time. The inputs are synchronized to a song. A flash game similar to what we wish to create can be found here: http://www.plonga.com/adventure/Music/Tap­Tap­Revenge­Online We will be using the keys on the FPGA board as inputs and the character display to show when the player needs to press each input. Additionally, we will be using the audio output to play a song for the game. For additional hardware, we may require a speaker to play the song. We may also consider using a keyboard as an external input component, as the keys on the FPGA board tend to have glitches.
