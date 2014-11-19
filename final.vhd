@@ -1,0 +1,61 @@
+LIBRARY ieee;
+USE ieee.std_logic_1164.ALL;
+use ieee.numeric_std.ALL; 
+ENTITY final IS
+	PORT(
+		CLOCK_50 	: IN STD_LOGIC; -- 50MHz
+		KEY			: IN STD_LOGIC_VECTOR(1 DOWNTO 0);
+		-- LCD controller stuff
+      LCD_RS, LCD_EN         : OUT STD_LOGIC;
+      LCD_RW                 : OUT STD_LOGIC;
+      LCD_ON                 : OUT STD_LOGIC;
+      LCD_DATA               : INOUT STD_LOGIC_VECTOR(7 DOWNTO 0)
+	);
+END final;
+
+ARCHITECTURE arch OF final IS
+		
+	-- LCD display controller
+	COMPONENT LCD_Display IS
+		PORT( 
+		 KEY         : IN STD_LOGIC_VECTOR(0 downto 0);
+       CLOCK_50       : IN  STD_LOGIC;
+       LCD_RS, LCD_EN         : OUT STD_LOGIC;
+       LCD_RW                 : OUT   STD_LOGIC;
+       LCD_ON                 : OUT STD_LOGIC;
+       LCD_DATA               : INOUT  STD_LOGIC_VECTOR(7 DOWNTO 0);
+		 GAME0 						: IN STD_LOGIC_VECTOR (1 DOWNTO 0);
+		 GAME1 						: IN STD_LOGIC_VECTOR (1 DOWNTO 0);
+		 GAME2 						: IN STD_LOGIC_VECTOR (1 DOWNTO 0);
+		 GAME3 						: IN STD_LOGIC_VECTOR (1 DOWNTO 0));
+	END COMPONENT;
+	
+	COMPONENT ARROW_GENERATOR IS
+
+	PORT(
+		CLOCK		: IN  STD_LOGIC;
+		RESET 	: IN 	STD_LOGIC;
+	 	GAME0 	: OUT STD_LOGIC_VECTOR (1 DOWNTO 0);
+		GAME1 	: OUT STD_LOGIC_VECTOR (1 DOWNTO 0);
+		GAME2 	: OUT STD_LOGIC_VECTOR (1 DOWNTO 0);
+		GAME3 	: OUT STD_LOGIC_VECTOR (1 DOWNTO 0));
+
+	END COMPONENT;
+	
+
+	SIGNAL reset: STD_LOGIC; 
+	SIGNAL A0 : STD_LOGIC_VECTOR (1 DOWNTO 0);
+	SIGNAL A1 : STD_LOGIC_VECTOR (1 DOWNTO 0);
+	SIGNAL A2 : STD_LOGIC_VECTOR (1 DOWNTO 0);
+	SIGNAL A3 : STD_LOGIC_VECTOR (1 DOWNTO 0);
+	SIGNAL CLOCK :STD_LOGIC;
+	
+BEGIN
+	reset <= NOT KEY(1);
+	CLOCK <= KEY(0);
+	
+	-- instantiate LCD controller
+	lcd : LCD_Display PORT MAP(KEY(0 DOWNTO 0),CLOCK_50,LCD_RS, LCD_EN,LCD_RW ,LCD_ON,LCD_DATA, A0, A1, A2, A3);
+	
+	AG : ARROW_GENERATOR PORT MAP(CLOCK, reset, A0, A1, A2, A3);
+END arch;
