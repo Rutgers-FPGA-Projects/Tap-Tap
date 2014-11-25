@@ -22,27 +22,28 @@ ARCHITECTURE Behavior OF ARROW_GENERATOR IS
 
 	SIGNAL COUNTER : INTEGER := 0;
 	
-	TYPE arrows IS (U, D, L, R);
-	ATTRIBUTE syn_encoding : STD_LOGIC_VECTOR(1 DOWNTO 0);
-	ATTRIBUTE syn_encoding of arrows : TYPE IS "00 01 10 11"; -- Ordered by Konami Code
+	type thegame is array(0 to 15) of STD_LOGIC_VECTOR(1 DOWNTO 0);
 	
-	type thegame is array(15 downto 0) of arrows;
-	
-	signal gamesequence1 : thegame;
-	
+	SIGNAL gamesequence1 : thegame;	
+	SIGNAL U, D, L, R : STD_LOGIC_VECTOR(1 DOWNTO 0);
 	
 BEGIN
+	U <= "00";
+	D <= "01";
+	L <= "10";
+	R <= "11";
 	
 	gamesequence1 <= (L,R,D,D,D,L,U,D,U,U,R,D,R,L,D,U);
 	
-	PROCESS (RISING_EDGE(CLOCK))
+	PROCESS (CLOCK)
 	BEGIN
-		COUNTER <= COUNTER + 1;
-		GAME0 <= gamesequence1(COUNTER);
-		GAME1 <= gamesequence1(COUNTER + 1);
-		GAME2 <= gamesequence1(COUNTER + 2);
-		GAME3 <= gamesequence1(COUNTER + 3);
-		
+		IF (rising_edge(CLOCK)) THEN
+			COUNTER <= COUNTER + 1;
+			GAME3 <= gamesequence1(COUNTER);
+			GAME2 <= gamesequence1(COUNTER + 1);
+			GAME1 <= gamesequence1(COUNTER + 2);
+			GAME0 <= gamesequence1(COUNTER + 3);
+		END IF;		
 	END PROCESS;
 
 END Behavior;

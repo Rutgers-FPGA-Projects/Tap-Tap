@@ -47,7 +47,8 @@ ENTITY LCD_Display IS
 		 GAME0 						: IN STD_LOGIC_VECTOR (1 DOWNTO 0);
 		 GAME1 						: IN STD_LOGIC_VECTOR (1 DOWNTO 0);
 		 GAME2 						: IN STD_LOGIC_VECTOR (1 DOWNTO 0);
-		 GAME3 						: IN STD_LOGIC_VECTOR (1 DOWNTO 0)
+		 GAME3 						: IN STD_LOGIC_VECTOR (1 DOWNTO 0);
+		 OFFSET						: IN INTEGER RANGE 0 TO 3
 		 );
       
 END ENTITY LCD_Display;
@@ -99,11 +100,45 @@ reset <= KEY(0);
 --| DE2                       |
 ------------------------------
 
-	LCD_display_string <= 
-		(ARROW_DECODE(GAME0),X"20",X"20",X"20",ARROW_DECODE(GAME1),X"20",X"20",X"20",
-		ARROW_DECODE(GAME2),X"20",X"20",X"20",ARROW_DECODE(GAME3),X"20",X"20",X"20",
-		X"20",X"20",X"20",X"20",X"20",X"20",X"20",X"20",
-		X"20",X"20",X"20",X"20",X"20",X"20",X"20",X"20");
+	PROCESS (OFFSET)
+	BEGIN
+	
+		CASE (OFFSET) IS
+		
+			WHEN 0 =>
+	
+				LCD_display_string <= 
+					(ARROW_DECODE(GAME0),X"20",X"20",X"20",ARROW_DECODE(GAME1),X"20",X"20",X"20",
+					ARROW_DECODE(GAME2),X"20",X"20",X"20",ARROW_DECODE(GAME3),X"20",X"20",X"20",
+					X"20",X"20",X"20",X"20",X"20",X"20",X"20",X"20",
+					X"20",X"20",X"20",X"20",X"20",X"20",X"20",X"20");
+					
+			WHEN 1 =>
+				
+				LCD_display_string <= 
+					(X"20",ARROW_DECODE(GAME0),X"20",X"20",X"20",ARROW_DECODE(GAME1),X"20",X"20",
+					X"20",ARROW_DECODE(GAME2),X"20",X"20",X"20",ARROW_DECODE(GAME3),X"20",X"20",
+					X"20",X"20",X"20",X"20",X"20",X"20",X"20",X"20",
+					X"20",X"20",X"20",X"20",X"20",X"20",X"20",X"20");
+					
+			WHEN 2 =>
+				
+				LCD_display_string <= 
+					(X"20",X"20",ARROW_DECODE(GAME0),X"20",X"20",X"20",ARROW_DECODE(GAME1),X"20",
+					X"20",X"20",ARROW_DECODE(GAME2),X"20",X"20",X"20",ARROW_DECODE(GAME3),X"20",
+					X"20",X"20",X"20",X"20",X"20",X"20",X"20",X"20",
+					X"20",X"20",X"20",X"20",X"20",X"20",X"20",X"20");
+					
+			WHEN 3 =>
+				
+				LCD_display_string <= 
+					(X"20",X"20",X"20",ARROW_DECODE(GAME0),X"20",X"20",X"20",ARROW_DECODE(GAME1),
+					X"20",X"20",X"20",ARROW_DECODE(GAME2),X"20",X"20",X"20",ARROW_DECODE(GAME3),
+					X"20",X"20",X"20",X"20",X"20",X"20",X"20",X"20",
+					X"20",X"20",X"20",X"20",X"20",X"20",X"20",X"20");
+		END CASE;
+		
+	END PROCESS;
 		
 -- BIDIRECTIONAL TRI STATE LCD DATA BUS
    LCD_DATA <= LCD_DATA_VALUE WHEN LCD_RW_INT = '0' ELSE "ZZZZZZZZ";
@@ -111,7 +146,7 @@ reset <= KEY(0);
 -- get next character in display string
    Next_Char <= LCD_display_string(CONV_INTEGER(CHAR_COUNT));
    LCD_RW <= LCD_RW_INT;
-   
+	
    PROCESS
    BEGIN
     WAIT UNTIL CLOCK_50'EVENT AND CLOCK_50 = '1';
