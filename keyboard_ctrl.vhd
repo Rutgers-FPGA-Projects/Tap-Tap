@@ -1,3 +1,59 @@
+----------------------------------------------------------------------------------------------------------------------
+-- keyboard_top
+----------------------------------------------------------------------------------------------------------------------
+library IEEE;
+use IEEE.STD_LOGIC_1164.all;
+--use work.vga_components.all;
+ENTITY keyboard_top IS
+	PORT(
+		MCLK : IN STD_LOGIC;
+		PS2C : IN STD_LOGIC;		-- PS2 CLOCK
+		PS2D : IN STD_LOGIC;		-- PS2 DATA
+		BTN : IN STD_LOGIC_VECTOR(3 DOWNTO 0);
+		LD : OUT STD_LOGIC_VECTOR(7 DOWNTO 0);
+		A_to_G : OUT STD_LOGIC_VECTOR(6 DOWNTO 0);
+		DP : OUT STD_LOGIC;
+		AN : OUT STD_LOGIC_VECTOR(3 DOWNTO 0)
+	);
+END keyboard_top;
+
+ARCHITECTURE keyboard_top OF keyboard_top IS
+	SIGNAL pclk, clock_50, clr : STD_LOGIC;
+	SIGNAL xkey : STD_LOGIC_VECTOR(15 DOWNTO 0);
+	SIGNAL keyval1, keyval2, keyval3 : STD_LOGIC_VECTOR(7 DOWNTO 0);
+	
+	BEGIN
+		xkey <= keyval1 & keyval2;
+		LD <= keyval3;
+		clr <= BTN(3);
+		
+		U1 : clkdiv2
+			PORT MAP(mclk => mclk, clr => clr,
+					clock_50 => clock_50,
+					clock_190 => clock_190
+				);
+		U2 : keyboard_ctrl
+			PORT MAP(clock_50 => clock_50, clr => clr,
+					PS2C => PS2C, PS2D => PS2D,
+					keyval1 => keyval1, keyval2 => keyval2,
+					keyval3 => keyval3
+				);
+		U3 : x7segbc
+			PORT MAP(x => xkey,
+					cclk => clock_190,		-- what is cclk???
+					clr => clr,
+					A_to_Q => A_to_Q,
+					AN => AN,
+					DP => DP
+				);
+END keyboard_top;
+
+
+
+
+----------------------------------------------------------------------------------------------------------------------
+-- keyboard_ctrl
+----------------------------------------------------------------------------------------------------------------------
 -- Keyboard controller
 -- Created through the assistance of the tutorial found at the following link
 -- https://www.youtube.com/watch?v=EtJBqvk1ZZw
@@ -42,18 +98,18 @@ ARCHITECTURE rtl OF keyboard_ctrl IS
 		ELSIF CLOCK_50'EVENT AND CLOCK_50 = '1' THEN
 			-- clock and data filters to remove noise, cleans the values	
 			ps2c_filter(7) <= PS2_CLK;
-			ps2c_filter(6 DOWNTO 0) <= ps2c_filter(7 DOWNTO 1);	// shift from most significant bit
+			ps2c_filter(6 DOWNTO 0) <= ps2c_filter(7 DOWNTO 1);	-- shift from most significant bit
 			ps2d_filter(7) <= PS2_DAT;
-			ps2d_filter(6 DOWNTO 0) <= ps2d_filter(7 DOWNTO 1);	// shift from most significant bit
+			ps2d_filter(6 DOWNTO 0) <= ps2d_filter(7 DOWNTO 1);	-- shift from most significant bit
 			
-			// cleaning noise
+			-- cleaning noise
 			IF ps2c_filter = X"FF" THEN
 				ps2cf <= '1';
 			ELSIF ps2c_filter = X"00" then
 				ps2cf <= '0';
 			END IF;
 			
-			// cleaning noise
+			-- cleaning noise
 			IF ps2d_filter = X"FF" THEN
 				ps2df <= '1';
 			ELSIF ps2d_filter = X"00" then
@@ -100,7 +156,7 @@ ARCHITECTURE rtl OF keyboard_ctrl IS
 						state <= wtclkhi1;
 					ELSE
 						state <= wtclklo1;
-						bit_count <= bit_count + 1;
+						bit_count <= std_logic_vector( unsigned(bit_count) + 1 );
 					END IF;
 				WHEN getkey1 =>
 					keyval1s <= shift1(8 DOWNTO 1);
@@ -122,13 +178,13 @@ ARCHITECTURE rtl OF keyboard_ctrl IS
 						state <= wtclkhi2;
 					ELSE
 						state <= wtclklo2;
-						bit_count <= bit_count + 1;
+						bit_count <= std_logic_vector( unsigned(bit_count) + 1 );
 					END IF;
 				WHEN getkey2 =>
 					keyval2s <= shift2(8 DOWNTO 1);
 					bit_count <= (others => '0');
-					state <= breakey;
-				WHEN breakey =>
+					state <= breakkey;
+				WHEN breakkey =>
 					IF keyval2s = X"f0" THEN
 						state <= wtclklo3;
 					ELSE
@@ -154,7 +210,7 @@ ARCHITECTURE rtl OF keyboard_ctrl IS
 						state <= wtclkhi3;
 					ELSE
 						state <= wtclklo3;
-						bit_count <= bit_count + 1;
+						bit_count <= std_logic_vector( unsigned(bit_count) + 1 );
 					END IF;
 				WHEN getkey3 =>
 					keyval3s <= shift3(8 DOWNTO 1);
@@ -169,79 +225,4 @@ ARCHITECTURE rtl OF keyboard_ctrl IS
 	KEYVAL3 <= keyval3s;
 	
 END rtl;
-
-----------------------------------------------------------------------------------------------------------------------
--- keyboard_top
-----------------------------------------------------------------------------------------------------------------------
-library IEEE;
-use IEEE.STD_LOGIC_1164.all;
-use work.vga_components.all;
-ENTITY keyboard_top IS
-	PORT(
-		MCLK : IN STD_LOGIC;
-		PS2C : IN STD_LOGIC;		// PS2 CLOCK
-		PS2D : IN STD_LOGIC;		// PS2 DATA
-		BTN : IN STD_LOGIC_VECTOR(3 DOWNTO 0)
-		LD : OUT STD_LOGIC_VECTOR(7 DOWNTO 0)
-		A_to_G : OUT STD_LOGIC_VECTOR(6 DOWNTO 0)
-		DP : OUT STD_LOGIC;
-		AN : OUT STD_LOGIC_VECTOR(3 DOWNTO 0)
-	);
-END keyboard_top;
-
-ARCHITECTURE keybaord_top OF keyboard_top IS
-	SIGNAL pclk, clock_50, clr : STD_LOGIC;
-	SIGNAL xkey : STD_LOGIC_VECTOR(15 DOWNTO 0);
-	SIGNAL keyval1, keyval2, keyval3 : STD_LOGIC_VECTOR(7 DOWNTO 0);
-	
-	BEGIN
-		xkey <= keyval1 & keyval2;
-		LD <= keyval3;
-		clr <= BTN(3);
-		
-		U1 : clkdiv2
-			PORT MAP(mclk => mclk, clr => clr,
-					clock_50 => clock_50,
-					clock_190 => clock_190
-				);
-		U2 : keyboard_ctrl
-			PORT MAP(clock_50 => clock_50, clr => clr,
-					PS2C => PS2C, PS2D => PS2D,
-					keyval1 => keyval1, keyval2 => keyval2,
-					keyval3 => keyval3
-				);
-		U3 : x7segbc
-			PORT MAP(x => xkey,
-					cclk => clock_190,		-- what is cclk???
-					clr => clr,
-					A_to_Q => A_to_Q,
-					AN => AN,
-					DP => DP
-				);
-END keyboard_top;
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
