@@ -18,7 +18,41 @@ ENTITY keyboard_top IS
 END keyboard_top;
 
 ARCHITECTURE keyboard_top OF keyboard_top IS
-	SIGNAL pclk, clock_50, clr : STD_LOGIC;
+
+	component clkdiv
+		port(
+				mclk : in std_logic;
+				clr : in std_logic;
+				clk190 : out std_logic;
+				clk48 : out std_logic
+		);
+	end component;
+	
+	component keyboard_ctrl
+	PORT(
+			CLOCK_50: IN STD_LOGIC;
+			CLR 	: IN STD_LOGIC;
+			PS2_CLK : IN STD_LOGIC;
+			PS2_DAT : IN STD_LOGIC;
+			KEYVAL1 : OUT STD_LOGIC_VECTOR(7 DOWNTO 0);
+			KEYVAL2 : OUT STD_LOGIC_VECTOR(7 DOWNTO 0);
+			KEYVAL3 : OUT STD_LOGIC_VECTOR(7 DOWNTO 0)
+		);
+	END component;
+	
+	component x7segbc
+		port(
+				x : in std_logic_vector(15 downto 0);
+				cclk : in std_logic;
+				clr : in std_logic;
+				a_to_g : out std_logic_vector(6 downto 0);
+				an : out std_logic_vector(3 downto 0);
+				dp : out std_logic
+		);
+	end component;
+
+
+	SIGNAL pclk, clock_50, clock_190, clr : STD_LOGIC;
 	SIGNAL xkey : STD_LOGIC_VECTOR(15 DOWNTO 0);
 	SIGNAL keyval1, keyval2, keyval3 : STD_LOGIC_VECTOR(7 DOWNTO 0);
 	
@@ -60,7 +94,7 @@ END keyboard_top;
 ----------------------------------------------------------------------------------------------------------------------
 --Example 52: clock divider
 library ieee;
-use ieee.std_logic_1164.all
+use ieee.std_logic_1164.all;
 use ieee.std_logic_unsigned.all;
 entity clkdiv is
 	port(
@@ -74,7 +108,7 @@ end clkdiv;
 architecture clkdiv of clkdiv is
 signal q : std_logic_vector (23 downto 0);
 begin
-	--clock divider\
+	--clock divider
 	process(mclk, clr)
 	begin
 		if clr = '1' then
@@ -92,7 +126,7 @@ end clkdiv;
 -- x7segbc
 ----------------------------------------------------------------------------------------------------------------------
 library ieee;
-use ieee.std_logic_1164.all
+use ieee.std_logic_1164.all;
 use ieee.std_logic_unsigned.all;
 entity x7segbc is
 	port(
