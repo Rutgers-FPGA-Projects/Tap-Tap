@@ -27,19 +27,26 @@ ARCHITECTURE keyboard_top OF keyboard_top IS
 		LD <= keyval3;
 		clr <= BTN(3);
 		
-		U1 : clkdiv2
-			PORT MAP(mclk => mclk, clr => clr,
-					clock_50 => clock_50,
-					clock_190 => clock_190
+		U1 : clkdiv
+			PORT MAP(
+					mclk => mclk,
+					clr => clr,
+					clock_190 => clock_190,
+					clock_48 => clock_48
 				);
+				
 		U2 : keyboard_ctrl
-			PORT MAP(clock_50 => clock_50, clr => clr,
+			PORT MAP(
+					clock_50 => clock_50,
+					clr => clr,
 					PS2C => PS2C, PS2D => PS2D,
 					keyval1 => keyval1, keyval2 => keyval2,
 					keyval3 => keyval3
 				);
+				
 		U3 : x7segbc
-			PORT MAP(x => xkey,
+			PORT MAP(
+					x => xkey,
 					cclk => clock_190,		-- what is cclk???
 					clr => clr,
 					A_to_Q => A_to_Q,
@@ -47,6 +54,125 @@ ARCHITECTURE keyboard_top OF keyboard_top IS
 					DP => DP
 				);
 END keyboard_top;
+
+----------------------------------------------------------------------------------------------------------------------
+-- clkdiv
+----------------------------------------------------------------------------------------------------------------------
+--Example 52: clock divider
+library ieee;
+use ieee.std_logic_1164.all
+use ieee.std_logic_unsigned.all;
+entity clkdiv is
+	port(
+			mclk : in std_logic;
+			clr : in std_logic;
+			clk190 : out std_logic;
+			clk48 : out std_logic
+	);
+end clkdiv;
+
+architecture clkdiv of clkdiv is
+signal q : std_logic_vector (23 downto 0);
+begin
+	--clock divider\
+	process(mclk, clr)
+	begin
+		if clr = '1' then
+			q <= X"000000";
+		elsif mclk'event and mclk = '1' then
+			q <= q + 1;
+		end if;
+	end process;
+	clk48 <= q(19);
+	clk190 <= q(17);
+end clkdiv;
+
+
+----------------------------------------------------------------------------------------------------------------------
+-- x7segbc
+----------------------------------------------------------------------------------------------------------------------
+library ieee;
+use ieee.std_logic_1164.all
+use ieee.std_logic_unsigned.all;
+entity x7segbc is
+	port(
+			x : in std_logic_vector(15 downto 0);
+			cclk : in std_logic;
+			clr : in std_logic;
+			a_to_g : out std_logic_vector(6 downto 0);
+			an : out std_logic_vector(3 downto 0);
+			dp : out std_logic
+	);
+end x7segbc;
+
+architecture x7segbc of x7segbc is
+signal s : std_logic_vector(1 downto 0);
+signal digit : std_logic_vector(3 downto 0);
+signal aen : std_logic_vector(3 downto 0);
+
+begin
+	dp <= '1';
+	-- set aen(3 downto 0) for leading blanks
+	aen(3) <= x(15) or x(14) or x(13) or x(12);
+	aen(2) <= x(15) or x(14) or x(13) or x(12) or x(11) or x(10) or x(9) or x(8);
+	aen(1) <= x(15) or x(14) or x(13) or x(12) or x(11) or x(10) or x(9) or x(8)or x(7) or x(6) or x(5) or x(4);
+	aen(0) <= '1';	-- digit 0 always on
+
+	-- Quad 4-to-1 MUX : mux4
+	process (s,x)
+		begin
+			case s is
+				when "00" => digit <= x(3 downto 0);
+				when "01" => digit <= x(7 downto 4);
+				when "10" => digit <= x(11 downto 8);
+				when others => digit <= x(15 downto 12);
+			end case;
+		end process;
+	
+	-- 7 seg decoder : hex7seg
+	process(digit)
+		begin
+			case digit is
+				when X"0" => a_to_g <= "0000001";	--0
+				when X"1" => a_to_g <= "1001111";	--1
+				when X"2" => a_to_g <= "0010010";	--2
+				when X"3" => a_to_g <= "0000110";	--3
+				when X"4" => a_to_g <= "1001100";	--4
+				when X"5" => a_to_g <= "0100100";	--5
+				when X"6" => a_to_g <= "0100000";	--6
+				when X"7" => a_to_g <= "0001101";	--7
+				when X"8" => a_to_g <= "0000000";	--8
+				when X"9" => a_to_g <= "0000100";	--9
+				when X"A" => a_to_g <= "0001000";	--A
+				when X"B" => a_to_g <= "1100000";	--b
+				when X"C" => a_to_g <= "0110001";	--C
+				when X"D" => a_to_g <= "1000010";	--d
+				when X"E" => a_to_g <= "0110000";	--E
+				when others => a_to_g <= "0111000";	--F
+			end case;
+		end process;
+		
+	-- Digit select : ancode
+	process(s, aen)
+	begin
+		an <= "1111";
+		if aen(conv_integer(s)) = '1' then
+			an(conv_integer(s)) <= '0';
+		end if;
+	end process;
+	
+	-- 2-bit counter
+	process(cclk, clr)
+	begin
+		if clr = '1' then
+			s <= "00";
+		elsif cclk'event and cclk = '1' then
+			s <= s + 1;
+		end if;
+	end process;
+end x7segbc;
+		
+
 
 
 
