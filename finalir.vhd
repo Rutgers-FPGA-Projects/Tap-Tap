@@ -5,21 +5,14 @@ use ieee.std_logic_unsigned.all ;
 entity finalir is
 port (
      CLOCK_50: in std_logic;
-	  key: in std_logic_vector(0 downto 0);
+	  reset: in std_logic;
 	  IRDA_RXD: in std_logic;
---	  data_ready: out std_logic;
-	  hex0,hex1,hex2,hex3,hex4,hex5,hex6,hex7: out std_logic_vector (6 downto 0)
+	  input_data: out std_logic_vector(7 DOWNTO 0)
 );
  end finalir;
  
  architecture rtl of finalir is
- 
-component bcd7seg is
-PORT ( C: IN STD_LOGIC_VECTOR(3 DOWNTO 0);
-		H: OUT STD_LOGIC_VECTOR(0 TO 6));
-end component;
-
-   type count_state is (idle, guidance, dataread);
+    type count_state is (idle, guidance, dataread);
 	signal state : count_state;
 	attribute syn_encoding:    string;
 	attribute syn_encoding of count_state: type is "00 01 10";
@@ -36,11 +29,12 @@ end component;
 	signal ready: std_logic;
 	
 	begin
+	input_data <= odata(23 DOWNTO 16);
 	--	//idle counter works on clk50 under idle state only		    
-   process (key(0),CLOCK_50)
+   process (reset,CLOCK_50)
       begin
 		 if(rising_edge(CLOCK_50))then
-		   if(key(0) = '0')then 
+		   if(reset = '0')then 
 			  idle_count <= 0;
 			  else
 			    if (idle_count_flag = '1')then 
@@ -52,10 +46,10 @@ end component;
 		  end if;		
 	end process;
 --//idle counter switch when IRDA_RXD is low under IDLE state		 
-		 	 process (key(0), CLOCK_50)
+		 	 process (reset, CLOCK_50)
             begin
        		    if (rising_edge(CLOCK_50))then
-					   if (key(0) = '0')then
+					   if (reset = '0')then
                     idle_count_flag <= '0';
 						  else 
 						    if ((state = idle) and (IRDA_RXD = '0'))then
@@ -67,10 +61,10 @@ end component;
 						end if;
 		 end process;
 	--	//state counter works on clk50 under state state only		    
-   process (key(0),CLOCK_50)
+   process (reset,CLOCK_50)
       begin
 		 if(rising_edge(CLOCK_50))then
-		   if(key(0) = '0')then 
+		   if(reset = '0')then 
 			  state_count <= 0;
 			  else
 			    if (state_count_flag = '1')then 
@@ -82,10 +76,10 @@ end component;
 		  end if;		
 	end process;
 --//state counter switch when IRDA_RXD is high under GUIdance state		 
-		 	 process (key(0), CLOCK_50)
+		 	 process (reset, CLOCK_50)
             begin
        		    if (rising_edge(CLOCK_50))then
-					   if (key(0) = '0')then
+					   if (reset = '0')then
                     state_count_flag <= '0';
 						  else 
 						    if ((state = guidance) and (IRDA_RXD = '1'))then
@@ -97,10 +91,10 @@ end component;
 						end if;
 		 end process;
 	--	//data counter works on clk50 under data state only		    
-   process (key(0),CLOCK_50)
+   process (reset,CLOCK_50)
       begin
 		 if(rising_edge(CLOCK_50))then
-		   if(key(0) = '0')then 
+		   if(reset = '0')then 
 			  data_count <= 0;
 			  else
 			    if (data_count_flag = '1')then 
@@ -112,10 +106,10 @@ end component;
 		  end if;		
 	end process;
 --//data counter switch when IRDA_RXD is high under DATAREAD state		 
-		 	 process (key(0), CLOCK_50)
+		 	 process (reset, CLOCK_50)
             begin
        		    if (rising_edge(CLOCK_50))then
-					   if (key(0) = '0')then
+					   if (reset = '0')then
                     data_count_flag <= '0';
 						  else 
 						    if ((state = dataread) and (IRDA_RXD = '1'))then
@@ -128,10 +122,10 @@ end component;
 		 end process;
 --------------------------------------------------------------------------------------------
 --------------------------------------------------------------------------------------------
-		 	 process (key(0), CLOCK_50)
+		 	 process (reset, CLOCK_50)
             begin
        		    if (rising_edge(CLOCK_50))then
-					   if (key(0) = '0')then
+					   if (reset = '0')then
                     bitcount <= 0;		
 							else
 							if(state = dataread)then 
@@ -147,10 +141,10 @@ end component;
 				end process;
 				
 
-process(key(0), CLOCK_50)
+process(reset, CLOCK_50)
 begin
 	if (rising_edge(CLOCK_50)) then
-		if (key(0) = '0') then
+		if (reset = '0') then
 			state <= idle ;
 		else 
 			case state is
@@ -173,10 +167,10 @@ begin
 	end if ;
 end process ;
 
-process(key(0), CLOCK_50)
+process(reset, CLOCK_50)
 begin
 	if (rising_edge(CLOCK_50)) then
-		if (key(0) = '0') then
+		if (reset = '0') then
 			data <= (others => '0') ;
 		elsif (state = dataread)then
 				if data_count >= 41500 then
@@ -188,10 +182,10 @@ begin
 	end if ;
 end process ;						
 						  
-process(key(0), CLOCK_50)
+process(reset, CLOCK_50)
 begin
 	if (rising_edge(CLOCK_50)) then
-		if (key(0) = '0') then
+		if (reset = '0') then
 			ready <= '0' ;
 		else 
 			if bitcount = 32 then
@@ -208,59 +202,16 @@ begin
 	end if ;
 end process ;
 
-process(key(0), CLOCK_50)
+process(reset, CLOCK_50)
 begin
 	if rising_edge(CLOCK_50) then
-		if key(0) = '0' then
+		if reset = '0' then
 			odata <= (others => '0') ;
 		elsif(ready = '1') then
 			odata <= data_buf ;
 		end if ;
 	end if ;
-	end process ;
-	
-               digit7: bcd7seg port map( odata(31 downto 28),hex7);
-               digit6: bcd7seg port map( odata(27 downto 24),hex6);
-               digit5: bcd7seg port map( odata(23 downto 20),hex5);	
-	            digit4: bcd7seg port map( odata(19 downto 16),hex4);
-               digit3: bcd7seg port map( odata(15 downto 12),hex3);              
-					digit2: bcd7seg port map( odata(11 downto 8 ),hex2);
-               digit1: bcd7seg port map( odata(7  downto 4 ),hex1);
-					digit0: bcd7seg port map( odata(3  downto 0 ),hex0);
-					
+	end process ;				
 
 
 end rtl ;						  
-						  
-LIBRARY ieee;
-USE ieee.std_logic_1164.all;
-ENTITY bcd7seg IS
-PORT ( C: IN STD_LOGIC_VECTOR(3 DOWNTO 0);
-		H: OUT STD_LOGIC_VECTOR(0 TO 6));
-END bcd7seg;
-
-ARCHITECTURE Behavior OF bcd7seg IS
-BEGIN
-PROCESS (C)
-BEGIN
-CASE C IS
-when "0000"=> H <="1000000";  -- '0'
-when "0001"=> H <="1111001";  -- '1'
-when "0010"=> H <="0100100";  -- '2'
-when "0011"=> H <="0110000";  -- '3'
-when "0100"=> H <="0011001";  -- '4' 
-when "0101"=> H <="0010010";  -- '5'
-when "0110"=> H <="0000010";  -- '6'
-when "0111"=> H <="1111000";  -- '7'
-when "1000"=> H <="0000000";  -- '8'
-when "1001"=> H <="0011000";  -- '9'
-when "1010"=> H <="0001000";  -- 'A'
-when "1011"=> H <="0000011";  -- 'b'
-when "1100"=> H <="1000110";  -- 'C'
-when "1101"=> H <="0100001";  -- 'd'
-when "1110"=> H <="0000110";  -- 'E'
-when "1111"=> H <="0001110";  -- 'F'
-	END CASE;
-	END PROCESS;
-END Behavior;
-		 
