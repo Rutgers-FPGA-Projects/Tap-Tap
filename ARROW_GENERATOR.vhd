@@ -33,16 +33,18 @@ BEGIN
 	L <= "10";
 	R <= "11";
 	
-	gamesequence1 <= (L,R,D,D,D,L,U,D,U,U,R,D,R,L,D,U);
+	gamesequence1 <= (L,R,D,R,U,L,U,D,R,L,R,D,U,L,D,U);
 	
 	GAME3 <= gamesequence1(COUNTER);
 	GAME2 <= gamesequence1(COUNTER + 1);
 	GAME1 <= gamesequence1(COUNTER + 2);
 	GAME0 <= gamesequence1(COUNTER + 3);
 	
-	PROCESS (CLOCK)
+	PROCESS (RESET, CLOCK)
 	BEGIN
-		IF (falling_edge(CLOCK)) THEN
+		IF (RESET = '1') THEN
+			COUNTER <= 0;
+		ELSIF (falling_edge(CLOCK)) THEN
 			COUNTER <= COUNTER + 1;
 		ELSE
 			COUNTER <= COUNTER;

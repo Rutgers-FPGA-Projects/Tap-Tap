@@ -38,7 +38,7 @@ ENTITY LCD_Display IS
 -- Example "A" is row 4 column 1, so hex value is X"41"
 -- *see LCD Controller's Datasheet for other graphics characters available
 --
-   PORT( KEY         : IN STD_LOGIC_VECTOR(0 downto 0);
+   PORT( RESET         : IN STD_LOGIC;
        CLOCK_50       : IN  STD_LOGIC;
        LCD_RS, LCD_EN          : OUT STD_LOGIC;
        LCD_RW                 : OUT   STD_LOGIC;
@@ -64,7 +64,6 @@ SIGNAL   state, next_command           : STATE_TYPE;
 SIGNAL   LCD_display_string            : character_string;
 
 -- Enter new ASCII hex data above for LCD Display
-SIGNAL         reset        : std_logic;
 SIGNAL   LCD_DATA_VALUE, Next_Char     : STD_LOGIC_VECTOR(7 DOWNTO 0);
 SIGNAL   CLK_COUNT_400HZ               : STD_LOGIC_VECTOR(19 DOWNTO 0);
 SIGNAL   CHAR_COUNT                 : STD_LOGIC_VECTOR(4 DOWNTO 0);
@@ -91,7 +90,6 @@ END ARROW_DECODE;
 BEGIN
 
 LCD_ON      <= '1';
-reset <= KEY(0);
 
 -- ASCII hex values for LCD Display
 -- Enter Live Hex Data Values from hardware here
@@ -116,7 +114,7 @@ reset <= KEY(0);
 					(ARROW_DECODE(G0),X"20",X"20",X"20",ARROW_DECODE(G1),X"20",X"20",X"20",
 					ARROW_DECODE(G2),X"20",X"20",X"20",ARROW_DECODE(G3),X"20",X"20",X"20",
 					X"20",X"20",X"20",X"20",X"20",X"20",X"20",X"20",
-					X"20",X"20",X"20",X"20",X"20",X"20",X"20",X"20");
+					X"20",X"20",X"20",X"20",X"20",X"20",X"20",X"5C");
 					
 			WHEN 1 =>
 				
@@ -124,7 +122,7 @@ reset <= KEY(0);
 					(X"20",ARROW_DECODE(G0),X"20",X"20",X"20",ARROW_DECODE(G1),X"20",X"20",
 					X"20",ARROW_DECODE(G2),X"20",X"20",X"20",ARROW_DECODE(G3),X"20",X"20",
 					X"20",X"20",X"20",X"20",X"20",X"20",X"20",X"20",
-					X"20",X"20",X"20",X"20",X"20",X"20",X"20",X"20");
+					X"20",X"20",X"20",X"20",X"20",X"20",X"20",X"5C");
 					
 			WHEN 2 =>
 				
@@ -132,7 +130,7 @@ reset <= KEY(0);
 					(X"20",X"20",ARROW_DECODE(G0),X"20",X"20",X"20",ARROW_DECODE(G1),X"20",
 					X"20",X"20",ARROW_DECODE(G2),X"20",X"20",X"20",ARROW_DECODE(G3),X"20",
 					X"20",X"20",X"20",X"20",X"20",X"20",X"20",X"20",
-					X"20",X"20",X"20",X"20",X"20",X"20",X"20",X"20");
+					X"20",X"20",X"20",X"20",X"20",X"20",X"20",X"5C");
 					
 			WHEN 3 =>
 				
@@ -140,7 +138,7 @@ reset <= KEY(0);
 					(X"20",X"20",X"20",ARROW_DECODE(G0),X"20",X"20",X"20",ARROW_DECODE(G1),
 					X"20",X"20",X"20",ARROW_DECODE(G2),X"20",X"20",X"20",ARROW_DECODE(G3),
 					X"20",X"20",X"20",X"20",X"20",X"20",X"20",X"20",
-					X"20",X"20",X"20",X"20",X"20",X"20",X"20",X"20");
+					X"20",X"20",X"20",X"20",X"20",X"20",X"20",X"5C");
 		END CASE;
 		
 	END PROCESS;

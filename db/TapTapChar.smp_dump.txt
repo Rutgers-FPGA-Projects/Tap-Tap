@@ -1,0 +1,38 @@
+
+State Machine - |final|LCD_Display:lcd|next_command
+Name next_command.DISPLAY_CLEAR next_command.DISPLAY_OFF next_command.RESET3 next_command.HOLD next_command.RESET1 next_command.DROP_LCD_EN next_command.RETURN_HOME next_command.LINE2 next_command.Print_String next_command.MODE_SET next_command.DISPLAY_ON next_command.FUNC_SET next_command.RESET2 
+next_command.RESET2 0 0 0 0 0 0 0 0 0 0 0 0 0 
+next_command.FUNC_SET 0 0 0 0 0 0 0 0 0 0 0 1 1 
+next_command.DISPLAY_ON 0 0 0 0 0 0 0 0 0 0 1 0 1 
+next_command.MODE_SET 0 0 0 0 0 0 0 0 0 1 0 0 1 
+next_command.Print_String 0 0 0 0 0 0 0 0 1 0 0 0 1 
+next_command.LINE2 0 0 0 0 0 0 0 1 0 0 0 0 1 
+next_command.RETURN_HOME 0 0 0 0 0 0 1 0 0 0 0 0 1 
+next_command.DROP_LCD_EN 0 0 0 0 0 1 0 0 0 0 0 0 1 
+next_command.RESET1 0 0 0 0 1 0 0 0 0 0 0 0 1 
+next_command.HOLD 0 0 0 1 0 0 0 0 0 0 0 0 1 
+next_command.RESET3 0 0 1 0 0 0 0 0 0 0 0 0 1 
+next_command.DISPLAY_OFF 0 1 0 0 0 0 0 0 0 0 0 0 1 
+next_command.DISPLAY_CLEAR 1 0 0 0 0 0 0 0 0 0 0 0 1 
+
+State Machine - |final|LCD_Display:lcd|state
+Name state.DISPLAY_CLEAR state.DISPLAY_OFF state.RESET3 state.RESET2 state.HOLD state.DROP_LCD_EN state.RETURN_HOME state.LINE2 state.Print_String state.MODE_SET state.DISPLAY_ON state.FUNC_SET state.RESET1 
+state.RESET1 0 0 0 0 0 0 0 0 0 0 0 0 0 
+state.FUNC_SET 0 0 0 0 0 0 0 0 0 0 0 1 1 
+state.DISPLAY_ON 0 0 0 0 0 0 0 0 0 0 1 0 1 
+state.MODE_SET 0 0 0 0 0 0 0 0 0 1 0 0 1 
+state.Print_String 0 0 0 0 0 0 0 0 1 0 0 0 1 
+state.LINE2 0 0 0 0 0 0 0 1 0 0 0 0 1 
+state.RETURN_HOME 0 0 0 0 0 0 1 0 0 0 0 0 1 
+state.DROP_LCD_EN 0 0 0 0 0 1 0 0 0 0 0 0 1 
+state.HOLD 0 0 0 0 1 0 0 0 0 0 0 0 1 
+state.RESET2 0 0 0 1 0 0 0 0 0 0 0 0 1 
+state.RESET3 0 0 1 0 0 0 0 0 0 0 0 0 1 
+state.DISPLAY_OFF 0 1 0 0 0 0 0 0 0 0 0 0 1 
+state.DISPLAY_CLEAR 1 0 0 0 0 0 0 0 0 0 0 0 1 
+
+State Machine - |final|finalir:FINAILIRR|state
+Name state~3 state~2 
+state.idle 0 0 
+state.guidance 0 1 
+state.dataread 1 0 

@@ -1,0 +1,7 @@
+<?xml version="1.0" ?>
+<LOG_ROOT>
+	<PROJECT NAME="TapTapChar">
+		<CBX_INST_ENTRY INSTANCE_NAME="|final|lpm_divide:Div0" CBX_FILE_NAME="lpm_divide_ghm.tdf"/>
+		<CBX_INST_ENTRY INSTANCE_NAME="|final|lpm_divide:Mod0" CBX_FILE_NAME="lpm_divide_k9m.tdf"/>
+	</PROJECT>
+</LOG_ROOT>

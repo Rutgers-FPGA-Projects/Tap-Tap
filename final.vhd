@@ -10,7 +10,9 @@ ENTITY final IS
       LCD_RW                 : OUT STD_LOGIC;
       LCD_ON                 : OUT STD_LOGIC;
       LCD_DATA               : INOUT STD_LOGIC_VECTOR(7 DOWNTO 0);
-		HEX0, HEX1, HEX2, HEX3: OUT STD_LOGIC_VECTOR(0 TO 6);
+		HEX0, HEX1				  : OUT STD_LOGIC_VECTOR(0 TO 6);
+		LEDG							:OUT STD_LOGIC_VECTOR(7 DOWNTO 7);
+		LEDR							:OUT STD_LOGIC_VECTOR(0 DOWNTO 0);
 		IRDA_RXD: in std_logic
 	);
 END final;
@@ -20,7 +22,7 @@ ARCHITECTURE arch OF final IS
 	-- LCD display controller
 	COMPONENT LCD_Display IS
 		PORT( 
-		 KEY         : IN STD_LOGIC_VECTOR(0 downto 0);
+		 RESET         : IN STD_LOGIC;
        CLOCK_50       : IN  STD_LOGIC;
        LCD_RS, LCD_EN         : OUT STD_LOGIC;
        LCD_RW                 : OUT   STD_LOGIC;
@@ -86,8 +88,14 @@ ARCHITECTURE arch OF final IS
 	
 	SIGNAL OFFSET : INTEGER RANGE 0 TO 3:= 0;
 	
+	SIGNAL WIN, LOSE, GAMEOVER: STD_LOGIC:= '0';
+	
 BEGIN
 	reset <= KEY(1);
+	GAMEOVER <= WIN OR LOSE;
+	
+	LEDG(7) <= WIN;
+	LEDR(0) <= LOSE;
 	
 	PROCESS (SCORE)
 	BEGIN
@@ -138,9 +146,11 @@ BEGIN
 		END CASE;
 	END PROCESS;
 	
-	PROCESS (CLOCK_50) -- 1.25 Hz clock
+	PROCESS (CLOCK_50,GAMEOVER) -- 1.25 Hz clock
 	BEGIN
-		IF (rising_edge(CLOCK_50)) THEN
+		IF (GAMEOVER = '1') THEN
+			COUNTER <= 0;
+		ELSIF (rising_edge(CLOCK_50)) THEN
 			COUNTER <= COUNTER + 1;
 			IF (COUNTER <= 20000000) THEN
 				CLOCK <= '1';
@@ -150,9 +160,11 @@ BEGIN
 		END IF;		
 	END PROCESS;
 	
-	PROCESS (CLOCK_50) -- 5 Hz clock
+	PROCESS (CLOCK_50,GAMEOVER) -- 5 Hz clock
 	BEGIN
-		IF (rising_edge(CLOCK_50)) THEN
+		IF (GAMEOVER = '1') THEN
+			COUNTER2 <= 0;
+		ELSIF (rising_edge(CLOCK_50)) THEN
 			COUNTER2 <= COUNTER2 + 1;
 			IF (COUNTER2 <= 5000000) THEN
 				CLOCK2 <= '1';
@@ -162,9 +174,11 @@ BEGIN
 		END IF;		
 	END PROCESS;
 	
-	PROCESS (CLOCK_50) -- 5 Hz clock
+	PROCESS (CLOCK_50,GAMEOVER) -- 5 Hz clock
 	BEGIN
-		IF (rising_edge(CLOCK_50)) THEN
+		IF (GAMEOVER = '1') THEN
+			COUNTER3 <= 0;
+		ELSIF (rising_edge(CLOCK_50)) THEN
 			COUNTER3 <= COUNTER3 + 1;
 			IF (COUNTER3 <= 625000) THEN
 				IRRESETER <= '0';
@@ -174,11 +188,33 @@ BEGIN
 		END IF;		
 	END PROCESS;
 	
-	PROCESS (CLOCK2)
-	BEGIN
-		IF (rising_edge(CLOCK2)) THEN
+	PROCESS (CLOCK2,RESET)
+	BEGIN	
+	
+		IF(RESET = '0' AND GAMEOVER = '1') THEN
+			WIN <= '0';
+			LOSE <= '0';
+			OFFSET <= 0;
+			SCORE <= 15;
+		ELSIF (GAMEOVER = '1') THEN
+			-- RESET ALL SIGNALS HERE
+			OFFSET <= 0;
+			SCORE <= 15;
+			WIN <= WIN;
+			LOSE <= LOSE;
+		ELSIF (rising_edge(CLOCK2)) THEN
 			OFFSET <= OFFSET + 1;
 			SCORE <= ASYNCSCORE;
+			IF (SCORE = 0) THEN
+				LOSE <= '1';
+				WIN <= '0';
+			ELSIF (SCORE = 31) THEN
+				WIN <= '1';
+				LOSE <= '0';
+			ELSE
+				WIN <= '0';
+				LOSE <= '0';
+			END IF;
 		END IF;
 	END PROCESS;
 	
@@ -200,7 +236,7 @@ BEGIN
 	
 	PROCESS (IRRESETER, SCORE, current_input, OFFSET, G3)
 	BEGIN
-		IF(IRRESETER = '1') THEN
+		IF(IRRESETER = '1' AND GAMEOVER ='0') THEN
 			IF(OFFSET = 3) THEN
 				IF(current_input(2) = '0' AND current_input(1 DOWNTO 0) = G3) THEN
 					ASYNCSCORE <= SCORE + 1;
@@ -230,15 +266,14 @@ BEGIN
 		END IF;
 	END PROCESS;
 		
-	DISP0 : bcd7seg PORT MAP (SCORE_VECTOR(3 DOWNTO 0), HEX0, '0', '0');
-	DISP1 : bcd7seg PORT MAP (SCORE_VECTOR(7 DOWNTO 4), HEX1, '0', '0');	
-	DISP2 : bcd7seg PORT MAP (input_data(3 DOWNTO 0), HEX2, '0', '0');	
-	DISP3 : bcd7seg PORT MAP (input_data(7 DOWNTO 4), HEX3, '0', '0');	
+	DISP0 : bcd7seg PORT MAP (SCORE_VECTOR(3 DOWNTO 0), HEX0, '0', GAMEOVER);
+	DISP1 : bcd7seg PORT MAP (SCORE_VECTOR(7 DOWNTO 4), HEX1, '0', GAMEOVER);	
+
 	
 	FINAILIRR : finalir PORT MAP (CLOCK_50, IRRESETER, IRDA_RXD, input_data);
 	
 	-- instantiate LCD controller
-	lcd : LCD_Display PORT MAP(KEY(0 DOWNTO 0),CLOCK_50,LCD_RS, LCD_EN,LCD_RW ,LCD_ON,LCD_DATA, A0, A1, A2, A3,OFFSET);
+	lcd : LCD_Display PORT MAP(RESET,CLOCK_50,LCD_RS, LCD_EN,LCD_RW ,LCD_ON,LCD_DATA, A0, A1, A2, A3,OFFSET);
 	
-	AG : ARROW_GENERATOR PORT MAP(CLOCK, reset, A0, A1, A2, A3);
+	AG : ARROW_GENERATOR PORT MAP(CLOCK, GAMEOVER, A0, A1, A2, A3);
 END arch;
